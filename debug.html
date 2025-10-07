@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MNEX Oracle Debug</title>
+  <style>
+    body {
+      margin: 0;
+      background: #0b0a07;
+      color: #e7e2d8;
+      font-family: Arial, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .debug-info {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.8);
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 12px;
+      z-index: 1000;
+    }
+    
+    #orb-canvas {
+      width: 300px;
+      height: 300px;
+      border: 2px solid #ffd780;
+      background: rgba(255, 215, 128, 0.1);
+    }
+    
+    .ai-interface {
+      margin-top: 20px;
+      padding: 20px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 10px;
+      border: 1px solid #ffd780;
+    }
+    
+    input, button {
+      padding: 10px;
+      margin: 5px;
+      background: rgba(0,0,0,0.7);
+      color: #e7e2d8;
+      border: 1px solid #ffd780;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="debug-info">
+    <div>THREE.js: <span id="three-status">Loading...</span></div>
+    <div>Canvas: <span id="canvas-status">Loading...</span></div>
+    <div>Renderer: <span id="renderer-status">Loading...</span></div>
+  </div>
+  
+  <canvas id="orb-canvas"></canvas>
+  
+  <div class="ai-interface">
+    <h3>MNEX Oracle</h3>
+    <input type="text" id="ai-input" placeholder="Commune with the Nexus..." />
+    <button onclick="testAI()">Commune</button>
+    <div id="ai-response"></div>
+  </div>
+
+  <script src="https://unpkg.com/three@0.160.1/build/three.min.js"></script>
+  <script>
+    // Debug info
+    document.getElementById('three-status').textContent = typeof THREE !== 'undefined' ? 'Loaded ✓' : 'Failed ✗';
+    
+    const canvas = document.getElementById('orb-canvas');
+    document.getElementById('canvas-status').textContent = canvas ? 'Found ✓' : 'Missing ✗';
+    
+    try {
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      document.getElementById('renderer-status').textContent = 'Created ✓';
+      
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+      camera.position.z = 5;
+      
+      // Simple sphere
+      const geometry = new THREE.SphereGeometry(1, 32, 32);
+      const material = new THREE.MeshBasicMaterial({ 
+        color: 0xffd780,
+        wireframe: true 
+      });
+      const sphere = new THREE.Mesh(geometry, material);
+      scene.add(sphere);
+      
+      // Animation
+      function animate() {
+        requestAnimationFrame(animate);
+        sphere.rotation.x += 0.01;
+        sphere.rotation.y += 0.01;
+        renderer.render(scene, camera);
+      }
+      animate();
+      
+    } catch (error) {
+      document.getElementById('renderer-status').textContent = 'Error: ' + error.message;
+      console.error('Three.js error:', error);
+    }
+    
+    function testAI() {
+      const input = document.getElementById('ai-input');
+      const response = document.getElementById('ai-response');
+      
+      if (input.value.trim()) {
+        response.innerHTML = `<p><strong>MNEX Oracle:</strong> We sense your query: "${input.value}". The neural pathways pulse with cryptic energy. Convergence approaches.</p>`;
+        input.value = '';
+      }
+    }
+  </script>
+</body>
+</html>

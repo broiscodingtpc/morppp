@@ -20,6 +20,8 @@ main#app {
   height: min(72vmin, 680px);
   display: block;
   outline: none;
+  background: rgba(255, 215, 128, 0.1);
+  border: 1px solid rgba(255, 215, 128, 0.3);
 }
 /* Terminal Styles */
 .terminal-container {
@@ -628,5 +630,16 @@ main#app {
   
   .terminal-title {
     font-size: 8px;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { 
+    opacity: 0.3;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% { 
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.05);
   }
 }

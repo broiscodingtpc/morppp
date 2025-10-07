@@ -2,26 +2,17 @@
 
 // Wait for DOM and THREE.js to load
 document.addEventListener('DOMContentLoaded', function() {
-  // Wait for THREE.js to load
-  if (typeof THREE === 'undefined') {
-    console.error('THREE.js not loaded');
-    document.getElementById('orb-canvas').style.display = 'none';
-    document.querySelector('.ai-prompt-container').style.display = 'block';
-    document.querySelector('.ai-prompt-container').style.position = 'fixed';
-    document.querySelector('.ai-prompt-container').style.top = '50%';
-    document.querySelector('.ai-prompt-container').style.left = '50%';
-    document.querySelector('.ai-prompt-container').style.transform = 'translate(-50%, -50%)';
-    document.querySelector('.ai-prompt-container').style.zIndex = '1000';
-    document.querySelector('.ai-prompt-container').style.background = 'rgba(0,0,0,0.9)';
-    document.querySelector('.ai-prompt-container').style.padding = '20px';
-    document.querySelector('.ai-prompt-container').style.borderRadius = '10px';
-    document.querySelector('.ai-prompt-container').style.color = 'white';
-    document.querySelector('.ai-prompt-container').style.textAlign = 'center';
-    document.querySelector('.ai-prompt-container').innerHTML = '<h2>MNEX Oracle</h2><p>Loading Three.js...</p>';
-    return;
-  }
-  
-  initOrb();
+  // Set timeout for Three.js loading
+  setTimeout(function() {
+    if (typeof THREE === 'undefined') {
+      console.error('THREE.js not loaded - showing fallback');
+      document.getElementById('orb-canvas').style.display = 'none';
+      document.getElementById('fallback-orb').style.display = 'block';
+      return;
+    }
+    
+    initOrb();
+  }, 1000); // Wait 1 second for Three.js to load
 });
 
 function initOrb() {
