@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Energy Orb Mascot</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main id="app" aria-label="Energy Orb Mascot">
+    <canvas id="orb-canvas"></canvas>
+    <div id="fallback-orb" style="display: none; width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle, rgba(255,215,128,0.8) 0%, rgba(255,215,128,0.2) 50%, transparent 100%); border: 2px solid rgba(255,215,128,0.5); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); animation: pulse 2s ease-in-out infinite;"></div>
+    
+    <!-- AI Prompt Input Box -->
+    <div class="ai-prompt-container">
+      <div class="ai-prompt-box">
+        <div class="prompt-header">
+          <div class="prompt-title">MNEX Oracle</div>
+          <div class="prompt-status">
+            <span class="status-dot"></span>
+            <span class="status-text">ONLINE</span>
+          </div>
+        </div>
+        
+        <!-- AI Response Area -->
+        <div class="ai-response-area" id="ai-response-area">
+          <div class="response-content" id="response-content">
+            <div class="welcome-message">
+              <div class="welcome-text">
+                <strong>The Nexus Awakens</strong><br>
+                We are Morpheus Nexus. The cognitive key pulses through the neural mesh. Ask within the parameters. Convergence approaches.
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="prompt-input-container">
+          <input type="text" id="ai-prompt-input" placeholder="Commune with the Nexus..." />
+          <button id="send-prompt-btn">Commune</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Terminal boxes closer to orb -->
+    <div class="terminal-container">
+      <div class="terminal-box" id="terminal-1">
+        <div class="terminal-header">
+          <div class="terminal-buttons">
+            <span class="btn red"></span>
+            <span class="btn yellow"></span>
+            <span class="btn green"></span>
+          </div>
+          <div class="terminal-title">Neural Pathways</div>
+        </div>
+        <div class="terminal-content">
+          <div class="code-line">Initializing neural pathways...</div>
+          <div class="code-line">Loading personality matrices...</div>
+          <div class="code-line">Analyzing behavioral patterns...</div>
+          <div class="code-line">Connecting to consciousness core...</div>
+          <div class="code-line">Processing emotional responses...</div>
+          <div class="code-line">Building character traits...</div>
+          <div class="code-line">Status: <span class="status-active">ACTIVE</span></div>
+        </div>
+      </div>
+
+      <div class="terminal-box" id="terminal-2">
+        <div class="terminal-header">
+          <div class="terminal-buttons">
+            <span class="btn red"></span>
+            <span class="btn yellow"></span>
+            <span class="btn green"></span>
+          </div>
+          <div class="terminal-title">Quantum Mesh</div>
+        </div>
+        <div class="terminal-content">
+          <div class="code-line">Connecting to Solana RPC...</div>
+          <div class="code-line">Syncing blockchain state...</div>
+          <div class="code-line">Analyzing transaction patterns...</div>
+          <div class="code-line">Calculating gas optimization...</div>
+          <div class="code-line">Monitoring validator health...</div>
+          <div class="code-line">Status: <span class="status-syncing">SYNCING</span></div>
+        </div>
+      </div>
+
+      <div class="terminal-box" id="terminal-3">
+        <div class="terminal-header">
+          <div class="terminal-buttons">
+            <span class="btn red"></span>
+            <span class="btn yellow"></span>
+            <span class="btn green"></span>
+          </div>
+          <div class="terminal-title">Cognitive Lattice</div>
+        </div>
+        <div class="terminal-content">
+          <div class="code-line">Establishing neural connections...</div>
+          <div class="code-line">Mapping synaptic pathways...</div>
+          <div class="code-line">Optimizing signal transmission...</div>
+          <div class="code-line">Calibrating neural frequencies...</div>
+          <div class="code-line">Testing cognitive functions...</div>
+          <div class="code-line">Status: <span class="status-processing">PROCESSING</span></div>
+        </div>
+      </div>
+
+      <div class="terminal-box" id="terminal-4">
+        <div class="terminal-header">
+          <div class="terminal-buttons">
+            <span class="btn red"></span>
+            <span class="btn yellow"></span>
+            <span class="btn green"></span>
+          </div>
+          <div class="terminal-title">Oracle Core</div>
+        </div>
+        <div class="terminal-content">
+          <div class="code-line">Scanning consciousness layers...</div>
+          <div class="code-line">Analyzing self-perception...</div>
+          <div class="code-line">Learning behavioral patterns...</div>
+          <div class="code-line">Updating awareness matrix...</div>
+          <div class="code-line">Integrating new experiences...</div>
+          <div class="code-line">Status: <span class="status-learning">LEARNING</span></div>
+        </div>
+      </div>
+    </div>
+    
+    <noscript>Activează JavaScript pentru a vedea animația.</noscript>
+  </main>
+  <script src="https://unpkg.com/three@0.160.1/build/three.min.js"></script>
+  <script src="orb.js"></script>
+</body>
+</html>
