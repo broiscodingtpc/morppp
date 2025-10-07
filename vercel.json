@@ -1,16 +1,15 @@
 {
   "version": 2,
-  "name": "morpheus-nexus-oracle",
   "builds": [
     {
       "src": "index.html",
       "use": "@vercel/static"
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [
