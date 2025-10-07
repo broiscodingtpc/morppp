@@ -1,0 +1,25 @@
+{
+  "name": "morpheus-nexus-oracle",
+  "version": "1.0.0",
+  "description": "MNEX Oracle - Interactive Energy Orb with AI",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 8080",
+    "dev": "python -m http.server 8080"
+  },
+  "keywords": [
+    "mnex",
+    "oracle",
+    "ai",
+    "energy-orb",
+    "threejs",
+    "groq"
+  ],
+  "author": "robertpetrea",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/robertpetrea/morpheu.git"
+  },
+  "homepage": "https://morpheu.vercel.app"
+}

@@ -1,0 +1,300 @@
+# Build an Interactive Energy Orb Mascot (Dark‑Gold Background)
+
+You are Cursor. Create a minimal, production‑ready website that renders a **pulsing, interactive energy orb** in the exact center of the page. No globe/earth textures — it must look like an abstract energy sphere with glow, inner turbulence, and a soft aura. Later we’ll add buttons and text around it, but for now the orb is the only focal element.
+
+---
+
+## Tech + Constraints
+
+* **Vanilla HTML/CSS/JS + Three.js** (no React). Keep it lightweight, single page.
+* **Files**: `index.html`, `styles.css`, `orb.js`.
+* **No external textures**. Use shaders/noise for motion.
+* Prefer **WebGL2** if available; gracefully fall back to WebGL1.
+* Code must be clean, commented, and mobile‑friendly.
+
+---
+
+## Visual Requirements
+
+* **Background**: very dark, muted gold gradient (example: `#0b0a07 → #1a140b`) with subtle vignette.
+* **Orb**: luminous energy sphere with:
+
+  * inner volumetric turbulence (noise‑driven)
+  * rim glow (fresnel)
+  * outer aura/bloom feel (simulate via additive shell + post‑approx in shader)
+  * slow breathing pulse at rest (scale + emissive intensity)
+* **Interactions**:
+
+  * **Hover / pointer near**: slightly stronger glow + gentle scale up
+  * **Pointer move/drag**: orb rotates toward pointer (smoothed)
+  * **Click / tap**: quick heartbeat pulse (1.2× then settle)
+  * **Scroll**: disabled (lock page), or ignored
+* **Center alignment**: perfectly centered in viewport across breakpoints. On small screens, orb scales down.
+
+---
+
+## Acceptance Criteria
+
+1. Page loads to a full‑viewport dark‑gold background with the orb perfectly centered.
+2. Orb exhibits idle breathing; interactions behave as specified.
+3. No images or texture assets are loaded; everything is procedural.
+4. Code passes a quick lighthouse check for no blocking 3rd‑party fonts/scripts.
+5. Works on desktop Chrome/Edge/Firefox and mobile Chrome/Safari.
+
+---
+
+## File: `index.html`
+
+```html
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Energy Orb Mascot</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main id="app" aria-label="Energy Orb Mascot">
+    <canvas id="orb-canvas"></canvas>
+    <noscript>Activează JavaScript pentru a vedea animația.</noscript>
+  </main>
+  <script type="module" src="orb.js"></script>
+</body>
+</html>
+```
+
+---
+
+## File: `styles.css`
+
+```css
+:root {
+  --gold-dark-1: #0b0a07; /* near-black with warm tint */
+  --gold-dark-2: #1a140b; /* dark brown-gold */
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: radial-gradient(1200px 800px at 50% 55%, rgba(255,215,128,0.05), transparent 60%),
+              radial-gradient(800px 600px at 50% 45%, rgba(255,200,80,0.04), transparent 60%),
+              linear-gradient(180deg, var(--gold-dark-1), var(--gold-dark-2));
+  overflow: hidden; /* lock scroll */
+  color: #e7e2d8;
+}
+main#app {
+  position: fixed; inset: 0; display: grid; place-items: center;
+}
+#orb-canvas {
+  width: min(72vmin, 680px);
+  height: min(72vmin, 680px);
+  display: block;
+  outline: none;
+}
+@media (max-width: 480px) {
+  #orb-canvas { width: 78vmin; height: 78vmin; }
+}
+```
+
+---
+
+## File: `orb.js`
+
+```js
+import * as THREE from 'https://unpkg.com/three@0.160.1/build/three.module.js';
+
+const canvas = document.getElementById('orb-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
+camera.position.set(0, 0, 4.2);
+
+// ---------- Resize ----------
+function resize() {
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize, { passive: true });
+resize();
+
+// ---------- Orb Geometry ----------
+const geo = new THREE.SphereGeometry(1, 128, 128);
+
+// GLSL noise utilities (simple 3D noise)
+const noise = `
+vec3 mod289(vec3 x){return x - floor(x * (1.0/289.0)) * 289.0;}
+vec4 mod289(vec4 x){return x - floor(x * (1.0/289.0)) * 289.0;}
+vec4 permute(vec4 x){return mod289(((x*34.0)+1.0)*x);}
+vec4 taylorInvSqrt(vec4 r){return 1.79284291400159 - 0.85373472095314 * r;}
+float snoise(vec3 v){
+  const vec2 C = vec2(1.0/6.0, 1.0/3.0);
+  const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
+  vec3 i = floor(v + dot(v, C.yyy));
+  vec3 x0 = v - i + dot(i, C.xxx);
+  vec3 g = step(x0.yzx, x0.xyz);
+  vec3 l = 1.0 - g;
+  vec3 i1 = min(g.xyz, l.zxy);
+  vec3 i2 = max(g.xyz, l.zxy);
+  vec3 x1 = x0 - i1 + C.xxx;
+  vec3 x2 = x0 - i2 + C.yyy;
+  vec3 x3 = x0 - D.yyy;
+  i = mod289(i);
+  vec4 p = permute( permute( permute(
+             i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
+           + i.y + vec4(0.0, i1.y, i2.y, 1.0 ))
+           + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
+  float n_ = 0.142857142857; // 1/7
+  vec3  ns = n_ * D.wyz - D.xzx;
+  vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+  vec4 x_ = floor(j * ns.z);
+  vec4 y_ = floor(j - 7.0 * x_ );
+  vec4 x = x_ *ns.x + ns.yyyy;
+  vec4 y = y_ *ns.x + ns.yyyy;
+  vec4 h = 1.0 - abs(x) - abs(y);
+  vec4 b0 = vec4( x.xy, y.xy );
+  vec4 b1 = vec4( x.zw, y.zw );
+  vec4 s0 = floor(b0)*2.0 + 1.0;
+  vec4 s1 = floor(b1)*2.0 + 1.0;
+  vec4 sh = -step(h, vec4(0.0));
+  vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
+  vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
+  vec3 p0 = vec3(a0.xy,h.x);
+  vec3 p1 = vec3(a1.xy,h.y);
+  vec3 p2 = vec3(a0.zw,h.z);
+  vec3 p3 = vec3(a1.zw,h.w);
+  vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
+  p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
+  vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+  m = m * m; return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
+}`;
+
+const vert = `#version 300 es
+in vec3 position; in vec3 normal;
+uniform mat4 modelViewMatrix; uniform mat4 projectionMatrix;
+uniform float uTime; uniform float uPulse;
+out vec3 vNormal; out vec3 vPos; out float vFres;
+${noise}
+void main(){
+  vec3 pos = position;
+  // Subtle surface distortion
+  float n = snoise(normalize(position) * 2.2 + vec3(uTime*0.25));
+  pos += normal * (0.06 + 0.04*n);
+  vec4 mv = modelViewMatrix * vec4(pos, 1.0);
+  vPos = mv.xyz; vNormal = normalize(mat3(modelViewMatrix) * normal);
+  vec3 V = normalize(-mv.xyz);
+  vFres = pow(1.0 - max(dot(vNormal, V), 0.0), 2.2);
+  gl_Position = projectionMatrix * mv;
+}
+`;
+
+const frag = `#version 300 es
+precision highp float;
+
+in vec3 vNormal; in vec3 vPos; in float vFres;
+out vec4 outColor;
+
+uniform float uTime; uniform float uPulse;
+
+void main(){
+  // Base warm energy color (dark gold -> amber)
+  vec3 base = vec3(1.00, 0.78, 0.35);
+  vec3 core = vec3(1.00, 0.88, 0.55);
+
+  float glow = smoothstep(0.0, 1.0, vFres);
+  float breathe = 0.35 + 0.25 * sin(uTime*1.2);
+  float pulse = uPulse; // 0..1 from interactions
+
+  float intensity = mix(breathe, 1.0, pulse);
+  vec3 col = mix(base, core, 0.55 + 0.35*glow) * (0.95 + 0.65*glow);
+  col *= 0.9 + 0.9*intensity;
+
+  // Soft edge falloff
+  float alpha = 1.0;
+  outColor = vec4(col, alpha);
+}
+`;
+
+const mat = new THREE.ShaderMaterial({
+  vertexShader: vert, fragmentShader: frag,
+  uniforms: {
+    uTime: { value: 0 },
+    uPulse: { value: 0 },
+  },
+  transparent: true
+});
+
+const orb = new THREE.Mesh(geo, mat);
+scene.add(orb);
+
+// Add an outer additive shell for aura
+const shell = new THREE.Mesh(
+  new THREE.SphereGeometry(1.18, 96, 96),
+  new THREE.MeshBasicMaterial({ color: 0xffd37a, transparent: true, opacity: 0.05 })
+);
+scene.add(shell);
+
+// ---------- Interaction State ----------
+let targetRot = new THREE.Vector2(0, 0);
+let currentRot = new THREE.Vector2(0, 0);
+let hover = false;
+let pulse = 0;
+
+window.addEventListener('pointermove', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const x = (e.clientX - rect.left) / rect.width * 2 - 1;
+  const y = (e.clientY - rect.top) / rect.height * 2 - 1;
+  targetRot.set(y * 0.6, x * 0.6);
+});
+
+window.addEventListener('pointerenter', () => { hover = true; });
+window.addEventListener('pointerleave', () => { hover = false; });
+window.addEventListener('click', () => { pulse = Math.min(pulse + 0.75, 1.0); });
+
+// ---------- Ticker ----------
+const clock = new THREE.Clock();
+function tick(){
+  const t = clock.getElapsedTime();
+
+  // Smooth rotation toward pointer
+  currentRot.lerp(targetRot, 0.07);
+  orb.rotation.x = currentRot.x;
+  orb.rotation.y = currentRot.y;
+
+  // Idle breathing scale; hover scale up
+  const baseScale = 1.0 + 0.02 * Math.sin(t*1.2);
+  const hoverScale = hover ? 1.04 : 1.0;
+  const pulseScale = 1.0 + 0.12 * pulse;
+  const scale = baseScale * hoverScale * pulseScale;
+  orb.scale.setScalar(scale);
+  shell.scale.setScalar(scale * 1.06);
+
+  // Decay pulse
+  pulse *= 0.92;
+  mat.uniforms.uPulse.value = Math.max(pulse, 0.0);
+  mat.uniforms.uTime.value = t;
+
+  renderer.render(scene, camera);
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+```
+
+---
+
+## How to Run Locally
+
+1. Create these three files in a folder.
+2. Open `index.html` directly OR start a tiny server: `python -m http.server 8080` and visit `http://localhost:8080`.
+
+---
+
+## Notes
+
+* Do **not** import big UI libraries. Keep footprint small.
+* Later we will add text and buttons around the orb; center layout must remain intact.
+* Keep colors warm/amber on a dark‑gold background; avoid pure white.
